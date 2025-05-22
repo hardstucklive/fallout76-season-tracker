@@ -1,32 +1,24 @@
-name: Update season info
+import requests
+from bs4 import BeautifulSoup
 
-on:
-  schedule:
-    - cron: '0 8 * * *'  # Every day at 8am UTC
-  workflow_dispatch:
+URL = "https://fallout.wiki/wiki/Season_17"
 
-jobs:
-  update:
-    runs-on: ubuntu-latest
+def fetch_season_end():
+    response = requests.get(URL)
+    soup = BeautifulSoup(response.content, "html.parser")
 
-    steps:
-      - uses: actions/checkout@v3
+    infobox = soup.find("table", class_="infobox")
+    if infobox:
+        rows = infobox.find_all("tr")
+        for row in rows:
+            if "End date" in row.text:
+                date_cell = row.find("td")
+                if date_cell:
+                    date = date_cell.text.strip()
+                    return f"Fallout 76 Season 17 ends on {date}."
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
+    return "Could not fetch season end date."
 
-      - name: Install dependencies
-        run: pip install beautifulsoup4 requests
-
-      - name: Run scraper
-        run: python scrape.py
-
-      - name: Commit & Push
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add season.txt
-          git commit -m "Auto-update season end date" || echo "No changes"
-          git push
+# Write to file
+with open("season.txt", "w") as file:
+    file.write(fetch_season_end())
