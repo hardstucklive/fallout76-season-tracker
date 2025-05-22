@@ -1,0 +1,23 @@
+.github/workflows/update.yml
+name: Update season info
+
+on:
+  schedule:
+    - cron: '0 8 * * *'  # Every day at 8AM UTC
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Update season.txt
+        run: |
+          echo "Fallout 76 Season 17 ends on June 11, 2025." > season.txt
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add season.txt
+          git commit -m "Update season info" || echo "No changes"
+          git push
